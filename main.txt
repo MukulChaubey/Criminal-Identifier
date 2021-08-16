@@ -1,0 +1,63 @@
+import cv2
+import pickle
+model = cv2.face.LBPHFaceRecognizer_create()
+face_ = cv2.CascadeClassifier('data/haarcascade_frontalface_alt2.xml')
+model.read("trainner.yml")
+l={}
+with open("labels.pickle","rb") as f:
+    og_=pickle.load(f)
+    l={v:k for k,v in og_.items()}
+print(l)
+cap =cv2.VideoCapture(0)
+def abcd():
+    global name
+    while(True):
+        ret,frame =cap.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_.detectMultiScale(gray , scaleFactor=1.5, minNeighbors=5)
+        for (x,y,w,h) in faces:
+            roi_gray = gray[y:y+h,x:x+w]
+    #         img_item="5.jpg"
+    #         cv2.imwrite(img_item,roi_gray)
+            id_,conf = model.predict(roi_gray)
+            if conf>=45 and conf<=80:
+    #             print(id_)
+    #             print(l[id_])
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                name= l[id_]
+#                 print(name)
+                color=(255,255,255)
+                s=2
+                cv2.putText(frame,name,(x,y),font,1,color,s,cv2.LINE_AA)
+            color = (255,0,0)
+            s = 2
+            end_x = x+ w
+            end_y = y +h
+            cv2.rectangle(frame,(x,y),(end_x,end_y ),color,s)
+
+        cv2.imshow('frame',frame)
+        if cv2.waitKey(20) & 0xFF == ord('q'):
+            break
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+window=Tk()
+label1 =Label(text="Please click the button to recognise",font="none 12 bold",fg="blue")
+# label1.grid(column=10, row=10 )
+label1.config(anchor=CENTER)
+label1.pack()
+btn=Button(window, text="Recognize", fg='blue',command=abcd)
+btn.config(anchor=CENTER)
+btn.pack()
+btn2=Button(window, text="show details", fg='blue',command=dis)
+btn2.config(anchor=CENTER)
+btn2.pack()
+sc=Scrollbar(window,orient=VERTICAL)
+sc.config( command = dis )
+
+# btn.place(x=100, y=100)
+
+window.title('CRIMINAL IDENTIFIER')
+window.geometry("600x600")
+window.mainloop()

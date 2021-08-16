@@ -1,0 +1,41 @@
+import os
+import cv2
+import pickle
+import numpy as np
+from PIL import Image
+base =r'C:\Users\internet\Desktop\face_recognisation'
+face_ = cv2.CascadeClassifier('data/haarcascade_frontalface_alt2.xml')
+recognizer = cv2.face.LBPHFaceRecognizer_create()
+img_ = os.path.join(base,"img")
+# print(img_)
+c_id =0
+l_ids = {}
+x_train=[]
+y_labels=[]
+print( os.walk(img_))
+for root,dirs,files in os.walk(img_):
+    for file in files:
+        if file.endswith("jpg") or file.endswith("jfif"):
+            path = os.path.join(root, file)
+            label= os.path.basename(root).replace(" ","-").lower()
+            if label in l_ids:
+                pass
+            else:
+                l_ids[label]= c_id
+                c_id += 1
+            id_ = l_ids[label]
+#             print(l_ids)
+
+            pil_img = Image.open(path).convert("L")
+            img_arr = np.array(pil_img,"uint8")
+#             print(img_arr)
+            faces = face_.detectMultiScale(img_arr, scaleFactor=1.5, minNeighbors=5)
+    
+            for(x,y,w,h) in faces:
+                roi = img_arr[y:y+h,x:x+w]
+                x_train.append(roi)
+                y_labels.append(id_)
+with open("labels.pickle","wb") as f:
+    pickle.dump(l_ids,f)
+recognizer.train(x_train,np.array(y_labels))
+recognizer.save("trainner.yml")
